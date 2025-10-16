@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calculadora y Bucles en JavaScript</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body { background:#cfe4f2; }
+    .panel-resultado{
+      background:#767b96;
+      border:1px solid #c6e6f5;
+      border-radius:.5rem;
+      padding:1rem;
+      min-height:90px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      white-space: pre-wrap;
+    }
+    .btn-op { margin-right:.5rem; margin-bottom:.75rem; }
+    .btn-loop { margin-right:.5rem; margin-bottom:.75rem; }
+    .badge-step { margin:.2rem .25rem; font-size:.95rem; }
+  </style>
+
+</head>
+<body>
+  <div class="container py-4">
+    <h1 class="display-5 fw-bold mb-4">Calculadora y Bucles en JavaScript</h1>
+
+    <div class="row g-3 align-items-end mb-2">
+      <div class="col-12 col-md-4">
+        <label for="n1" class="form-label">Número 1:</label>
+        <input id="n1" type="number" class="form-control" placeholder="Introduce el primero" value="12">
+      </div>
+      <div class="col-12 col-md-4">
+        <label for="n2" class="form-label">Número 2:</label>
+        <input id="n2" type="number" class="form-control" placeholder="Introduce el segundo">
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <button class="btn btn-primary btn-op" id="btnSumar">Sumar +</button>
+      <button class="btn btn-primary btn-op" id="btnRestar">Restar -</button>
+      <button class="btn btn-primary btn-op" id="btnMultiplicar">Multiplicar *</button>
+      <button class="btn btn-primary btn-op" id="btnDividir">Dividir /</button>
+      <button class="btn btn-primary btn-op" id="btnPotencia">Potencia **</button>
+      <button class="btn btn-primary btn-op" id="btnModulo">Módulo %</button>
+    </div>
+
+    <div class="mb-2">
+      <button class="btn btn-success btn-loop" id="btnForTexto">For (texto)</button>
+      <button class="btn btn-success btn-loop" id="btnWhileTexto">While (texto)</button>
+      <button class="btn btn-success btn-loop" id="btnDoWhileTexto">Do…While (texto)</button>
+    </div>
+
+    <div class="mb-4">
+      <button class="btn btn-warning btn-loop" id="btnForBadges">For (badges)</button>
+      <button class="btn btn-warning btn-loop" id="btnWhileBadges">While (badges)</button>
+      <button class="btn btn-warning btn-loop" id="btnDoWhileBadges">Do…While (badges)</button>
+    </div>
+
+    <div class="panel-resultado" id="salida" aria-live="polite">Resultado aquí…</div>
+  </div>
+
+  <script>
+    function leerNumero(id){
+      const v = (document.getElementById(id).value || '').trim();
+      if(v === '') return NaN;
+      return Number(v);
+    }
+    function mostrarTexto(titulo, lineas){
+      const out = document.getElementById('salida');
+      const cuerpo = Array.isArray(lineas) ? lineas.join('\\n') : String(lineas);
+      out.innerText = (titulo ? titulo + '\\n' : '') + cuerpo;
+    }
+    function mostrarBadges(titulo, cantidad){
+      const out = document.getElementById('salida');
+      out.innerHTML = '';
+      const header = document.createElement('div');
+      header.className = 'fw-bold mb-2';
+      header.textContent = titulo;
+      out.appendChild(header);
+
+      const cont = document.createElement('div');
+      out.appendChild(cont);
+      for(let i=1; i<=cantidad; i++){
+        const s = document.createElement('span');
+        s.className = 'badge text-bg-secondary badge-step';
+        s.textContent = '#' + i;
+        cont.appendChild(s);
+      }
+    }
+    function validarOperacion(op){
+      const a = leerNumero('n1');
+      const b = leerNumero('n2');
+      if(Number.isNaN(a) || Number.isNaN(b)){
+        mostrarTexto('Error', 'Introduce ambos números.');
+        return null;
+      }
+      if(op === 'div' && b === 0){
+        mostrarTexto('Error', 'No se puede dividir entre 0.');
+        return null;
+      }
+      return {a, b};
+    }
+
+    document.getElementById('btnSumar').onclick = () => {
+      const v = validarOperacion();
+      if(!v) return;
+      mostrarTexto('Suma', `${v.a} + ${v.b} = ${v.a + v.b}`);
+    };
+    document.getElementById('btnRestar').onclick = () => {
+      const v = validarOperacion();
+      if(!v) return;
+      mostrarTexto('Resta', `${v.a} - ${v.b} = ${v.a - v.b}`);
+    };
+    document.getElementById('btnMultiplicar').onclick = () => {
+      const v = validarOperacion();
+      if(!v) return;
+      mostrarTexto('Multiplicación', `${v.a} * ${v.b} = ${v.a * v.b}`);
+    };
+    document.getElementById('btnDividir').onclick = () => {
+      const v = validarOperacion('div');
+      if(!v) return;
+      mostrarTexto('División', `${v.a} / ${v.b} = ${v.a / v.b}`);
+    };
+    document.getElementById('btnPotencia').onclick = () => {
+      const v = validarOperacion();
+      if(!v) return;
+      mostrarTexto('Potencia', `${v.a} ** ${v.b} = ${v.a ** v.b}`);
+    };
+    document.getElementById('btnModulo').onclick = () => {
+      const v = validarOperacion();
+      if(!v) return;
+      mostrarTexto('Módulo', `${v.a} % ${v.b} = ${v.a % v.b}`);
+    };
+
+    function leerRepeticiones(){
+      const n = leerNumero('n1');
+      if(Number.isNaN(n)){
+        mostrarTexto('Error', 'Introduce el Número 1 para las repeticiones.');
+        return null;
+      }
+      return Math.trunc(n);
+    }
+
+    document.getElementById('btnForTexto').onclick = () => {
+      const n = leerRepeticiones();
+      if(n === null) return;
+      const pasos = [];
+      for(let i=1; i<=n; i++) pasos.push(`Repetición ${i}`);
+      mostrarTexto('Bucle For (texto):', pasos);
+    };
+    document.getElementById('btnWhileTexto').onclick = () => {
+      let n = leerRepeticiones();
+      if(n === null) return;
+      const pasos = [];
+      let i = 1;
+      while(i<=n){
+        pasos.push(`Repetición ${i}`);
+        i++;
+      }
+      mostrarTexto('Bucle While (texto):', pasos);
+    };
+    document.getElementById('btnDoWhileTexto').onclick = () => {
+      let n = leerRepeticiones();
+      if(n === null) return;
+      const pasos = [];
+      let i = 1;
+
+      do{
+        if(n <= 0 && i>1) break;
+        if(n > 0 && i>n) break;
+        pasos.push(`Repetición ${i}`);
+        i++;
+      }while(true);
+      mostrarTexto('Bucle Do…While (texto):', pasos);
+    };
+
+    document.getElementById('btnForBadges').onclick = () => {
+      const n = leerRepeticiones();
+      if(n === null) return;
+      mostrarBadges('Bucle For (badges):', Math.max(0, n));
+    };
+    document.getElementById('btnWhileBadges').onclick = () => {
+      let n = leerRepeticiones();
+      if(n === null) return;
+      let i=1, total = 0;
+      while(i<=n){ total++; i++; }
+      mostrarBadges('Bucle While (badges):', Math.max(0, total));
+    };
+    document.getElementById('btnDoWhileBadges').onclick = () => {
+      let n = leerRepeticiones();
+      if(n === null) return;
+      let total = 0, i = 1;
+      do{
+        if(n <= 0 && i>1) break;
+        if(n > 0 && i>n) break;
+        total++; i++;
+      }while(true);
+      mostrarBadges('Bucle Do…While (badges):', Math.max(0, total));
+    };
+  </script>
+</body>
+</html>
