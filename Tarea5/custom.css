@@ -1,0 +1,38 @@
+/* custom.css */
+#contenido p {
+  margin: 0;
+  padding: .5rem .75rem;
+  background: #ffffff;
+  border: 1px solid #eee;
+  border-radius: .5rem;
+}
+
+/* Ejercicio 1 */
+.resaltado {
+  background: #fff3cd; 
+}
+
+/* Ejercicio 3  */
+.hover-activo {
+  background: #f2f2f2 !important; 
+}
+
+/* Ejercicio 4  */
+.error {
+  display: none;
+  background: #b40c2b;
+  font-weight: 600;
+}
+.error.mostrar {
+  display: block;
+}
+
+/* Ejercicio 5  */
+#listaTareas li {
+  cursor: pointer;
+  user-select: none;
+}
+#listaTareas li.completada {
+  text-decoration: line-through;
+  opacity: .6;
+}
