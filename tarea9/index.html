@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Solución práctica – Tema 9</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+  <style>
+    
+    .text-success { color: #5cb85c; }
+    .text-danger { color: #d9534f; }
+    .mb-3 { margin-bottom: 15px; } 
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="mb-3">Solución práctica –Tema 9</h1>
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        Formulario con eventos, expresiones regulares y cookies
+      </div>
+      <div class="panel-body">
+
+        <!-- texto de bienvenida usando cookie -->
+        <p id="welcomeText" class="text-info"></p>
+
+        <!-- alerta general -->
+        <div id="alert-container"></div>
+
+        <form id="userForm" novalidate>
+          <!-- NOMBRE -->
+          <div class="mb-3">
+            <label for="username" class="form-label">Nombre de usuario</label>
+            <input type="text" class="form-control" id="username" name="username">
+            <p id="usernameHelp" class="help-block help-text"></p>
+            <p id="usernameMsg" class="help-block"></p>
+          </div>
+
+          <!-- EMAIL -->
+          <div class="mb-3">
+            <label for="email">Correo electronico</label>
+            <input type="email" class="form-control" id="email" name="email">
+            <p id="emailHelp" class="help-block help-text"></p>
+            <p id="emailMsg" class="help-block"></p>
+          </div>
+
+          <!-- PASSWORD -->
+          <div class="mb-3">
+            <label for="password">Contrasena</label>
+            <input type="password" class="form-control" id="password" name="password">
+            <p id="passwordHelp" class="help-block help-text"></p>
+            <p id="passwordMsg" class="help-block"></p>
+          </div>
+
+          <!-- EDAD -->
+          <div class="mb-3">
+            <label for="age">Edad</label>
+            <input type="number" class="form-control" id="age" name="age" min="0">
+            <p id="ageHelp" class="help-block help-text"></p>
+            <p id="ageMsg" class="help-block"></p>
+          </div>
+
+          <!-- RECORDARME -->
+          <div class="checkbox mb-3">
+            <label>
+              <input type="checkbox" id="rememberMe" checked>
+              Recordarme(guardar cookie con el nombre)
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Enviar</button>
+          <button type="button" class="btn btn-danger" id="btnDeleteCookie">
+            Eliminar cookie
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- jQuery + Bootstrap JS -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+  <script>
+
+    // Funciones de cookies
+    function setCookie(name, value, days) {
+      const d = new Date();
+      d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+      const expires = "expires=" + d.toUTCString();
+      document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
+    }
+
+    function getCookie(name) {
+      const cname = name + "=";
+      const decoded = decodeURIComponent(document.cookie);
+      const ca = decoded.split(";");
+      for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === " ") c = c.substring(1);
+        if (c.indexOf(cname) === 0) {
+          return c.substring(cname.length, c.length);
+        }
+      }
+      return "";
+    }
+
+    function eraseCookie(name) {
+      document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    }
+
+    //  DOM
+    function showAlert(message, type) {
+      const container = document.getElementById("alert-container");
+      container.innerHTML =
+        '<div class="alert alert-' + type + ' alert-dismissible" role="alert">' +
+        '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+        message +
+        "</div>";
+    }
+
+    function setValid(elem, msgElem, message) {
+      elem.classList.add("is-valid");
+      elem.classList.remove("is-invalid");
+      msgElem.textContent = message;
+      msgElem.classList.remove("text-danger");
+      msgElem.classList.add("text-success");
+    }
+
+    function setInvalid(elem, msgElem, message) {
+      elem.classList.add("is-invalid");
+      elem.classList.remove("is-valid");
+      msgElem.textContent = message;
+      msgElem.classList.remove("text-success");
+      msgElem.classList.add("text-danger");
+    }
+
+    //  Expresiones regulares
+    const regexName  = /^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$/;
+    const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const regexPass  = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
+    const regexAge   = /^\d+$/;
+
+    const helpTexts = {
+      username: "Solo letras y espacios.",
+      email: "Introduce un correo electrónico válido.",
+      password: "Mínimo 8 caracteres, una mayúscula, un número y un símbolo.",
+      age: "Introduce tu edad en números."
+    };
+
+    function validateField(input, regex, msgElem) {
+      const value = input.value.trim();
+
+      if (value === "") {
+        input.classList.remove("is-valid", "is-invalid");
+        msgElem.textContent = "";
+        msgElem.classList.remove("text-success", "text-danger");
+        return false;
+      }
+
+      if (regex.test(value)) {
+        setValid(input, msgElem, "Correcto");
+        return true;
+      } else {
+        setInvalid(input, msgElem, "Formato incorrecto");
+        return false;
+      }
+    }
+
+    //  inicialización (window.onload)
+    window.onload = function () {
+      const form          = document.getElementById("userForm");
+      const usernameInput = document.getElementById("username");
+      const emailInput    = document.getElementById("email");
+      const passwordInput = document.getElementById("password");
+      const ageInput      = document.getElementById("age");
+      const rememberMe    = document.getElementById("rememberMe");
+      const deleteBtn     = document.getElementById("btnDeleteCookie");
+      const welcomeText   = document.getElementById("welcomeText");
+
+      const inputs = [usernameInput, emailInput, passwordInput, ageInput];
+
+      // Cargar cookie al entrar
+      const cookieUsername = getCookie("username");
+      if (cookieUsername) {
+        welcomeText.textContent = "Bienvenido de nuevo, " + cookieUsername;
+        usernameInput.value = cookieUsername;
+        validateField(usernameInput, regexName, document.getElementById("usernameMsg"));
+        showAlert("Nombre cargado desde la cookie.", "success");
+      }
+
+      // Eventos onfocus / onblur / oninput
+      inputs.forEach((input) => {
+        const id      = input.id;
+        const helpElem = document.getElementById(id + "Help");
+        const msgElem  = document.getElementById(id + "Msg");
+
+        // onfocus → muestra ayuda
+        input.addEventListener("focus", () => {
+          helpElem.textContent = helpTexts[id];
+        });
+
+        // onblur → quita ayuda
+        input.addEventListener("blur", () => {
+          helpElem.textContent = "";
+        });
+
+        // oninput → mientras escribes: verde / rojo
+        input.addEventListener("input", () => {
+          let regex;
+          if (id === "username")      regex = regexName;
+          else if (id === "email")    regex = regexEmail;
+          else if (id === "password") regex = regexPass;
+          else if (id === "age")      regex = regexAge;
+
+          validateField(input, regex, msgElem);
+        });
+      });
+
+      // Envío formulario
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const okName = validateField(usernameInput, regexName,
+          document.getElementById("usernameMsg"));
+        const okMail = validateField(emailInput, regexEmail,
+          document.getElementById("emailMsg"));
+        const okPass = validateField(passwordInput, regexPass,
+          document.getElementById("passwordMsg"));
+        const okAge  = validateField(ageInput, regexAge,
+          document.getElementById("ageMsg"));
+
+        if (okName && okMail && okPass && okAge) {
+          if (rememberMe.checked) {
+            setCookie("username", usernameInput.value.trim(), 7);
+          }
+          showAlert("Formulario enviado correctamente.", "success");
+        } else {
+          showAlert("Hay errores en el formulario. Revisa los campos en rojo.", "danger");
+        }
+      });
+
+      // Botón eliminar cookie
+      deleteBtn.addEventListener("click", function () {
+        eraseCookie("username");
+        welcomeText.textContent = "";
+        showAlert('Cookie "username" eliminada.', "info");
+      });
+    };
+  </script>
+</body>
+</html>
